@@ -75,11 +75,11 @@ class Orders(object):
         :return: dict of Boolean -- whether request succeeded or not for each
             order_id that was pending
         """
-        pending = self.main.get_orders('PENDING')['orders']
+        pending = self.main.account.get_orders('PENDING')['orders']
         ids = [order['order_id'] for order in pending]
         result = {}
         for order_id in ids:
-            status = self.main.stop_order(order_id)
+            status = self.stop_order(order_id)
             result[order_id] = status['success']
         return result
 
