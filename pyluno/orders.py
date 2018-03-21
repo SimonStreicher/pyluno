@@ -14,7 +14,7 @@ class Orders(object):
         self.main = main
 
     def create_limit_order(self, order_type, volume, price,
-                           base_account_id, counter_account_id):
+                           base_account_id=None, counter_account_id=None):
         """Create a new limit order.
 
         :param order_type: 'buy' or 'sell'
@@ -22,14 +22,24 @@ class Orders(object):
         :param price: the ZAR price per bitcoin
         :return: the order id
         """
-        data = {
-            'pair': self.main.pair,
-            'type': 'BID' if order_type == 'buy' else 'ASK',
-            'volume': str(volume),
-            'price': str(price),
-            'base_account_id': base_account_id,
-            'counter_account_id': counter_account_id,
-        }
+
+        if (base_account_id is not None) and (counter_account_id is not None):
+            data = {
+                'pair': self.main.pair,
+                'type': 'BID' if order_type == 'buy' else 'ASK',
+                'volume': str(volume),
+                'price': str(price),
+                'base_account_id': base_account_id,
+                'counter_account_id': counter_account_id,
+            }
+        else:
+            data = {
+                'pair': self.main.pair,
+                'type': 'BID' if order_type == 'buy' else 'ASK',
+                'volume': str(volume),
+                'price': str(price),
+            }
+
         result = self.main.api_request('postorder', data=data,
                                        http_call='post')
         return result
@@ -76,11 +86,12 @@ class Orders(object):
             order_id that was pending
         """
         pending = self.main.account.get_orders('PENDING')['orders']
-        ids = [order['order_id'] for order in pending]
         result = {}
-        for order_id in ids:
-            status = self.stop_order(order_id)
-            result[order_id] = status['success']
+        if pending is not None:
+            ids = [order['order_id'] for order in pending]
+            for order_id in ids:
+                status = self.stop_order(order_id)
+                result[order_id] = status['success']
         return result
 
     def get_order(self, order_id):
